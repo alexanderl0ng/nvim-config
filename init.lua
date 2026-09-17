@@ -19,12 +19,24 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
     {
         "nvim-treesitter/nvim-treesitter",
+        branch = "main",
         build = ":TSUpdate",
+        lazy = false,
         config = function()
-            require("nvim-treesitter").setup({
-                ensure_installed = { "c", "cpp", "lua", "rust", "vim", "vimdoc", "query", "markdown", "markdown_inline", "bash", "html", "haskell", "python" },
-                highlight = { enable = true },
-                indent = { enable = true },
+            local ts_filetypes = {
+                "c", "cpp", "lua", "rush", "vim", "vimdoc", "query", "markdown", "markdown_inline", "bash", "html", "haskell", "python",
+            }
+
+            require("nvim-treesitter").install(ts_filetypes)
+
+            vim.api.nvim_create_autocmd("FileType", {
+                pattern = ts_filetypes,
+                callback = function()
+                    vim.treesitter.start()
+                    vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
+                    vim.wo[0][0].foldmethod = "expr"
+                    vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+                end,
             })
         end,
     },
