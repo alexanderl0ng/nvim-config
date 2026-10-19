@@ -17,6 +17,7 @@ vim.opt.rtp:prepend(lazypath)
 
 -- Plugins
 require("lazy").setup({
+    {   "neovim/nvim-lspconfig" },
     {
         "nvim-treesitter/nvim-treesitter",
         branch = "main",
@@ -24,18 +25,17 @@ require("lazy").setup({
         lazy = false,
         config = function()
             local ts_filetypes = {
-                "c", "cpp", "lua", "rush", "vim", "vimdoc", "query", "markdown", "markdown_inline", "bash", "html", "haskell", "python",
+                "c", "cpp", "lua", "rust", "vim", "vimdoc", "query", "markdown", "markdown_inline", "bash", "html", "haskell", "python",
             }
 
             require("nvim-treesitter").install(ts_filetypes)
 
             vim.api.nvim_create_autocmd("FileType", {
-                pattern = ts_filetypes,
-                callback = function()
-                    vim.treesitter.start()
-                    vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
-                    vim.wo[0][0].foldmethod = "expr"
-                    vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+                callback = function(args)
+                    if not pcall(vim.treesitter.start, args.buf) then
+                        return
+                    end
+                    vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
                 end,
             })
         end,
@@ -95,6 +95,8 @@ vim.opt.undofile = true
 -- External Dependency Check (for LSP servers Mason can't fully self install)
 local function check_external_deps()
     local deps = {
+        { cmd = "tree-sitter", reason = "required to build treesitter parsers" },
+        { cmd = "cc", alt = "gcc", reason = "C compiler, required by treesitter"},
         { cmd = "node", reason = "required by html-lsp and pyright" },
         { cmd = "ghc", reason = "required by haskell-language-server" },
         { cmd = "cabal", alt = "stack", reason = "required by haskell-language-server (either one)" },
