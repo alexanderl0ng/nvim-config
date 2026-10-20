@@ -1,10 +1,14 @@
 -- Check Neovim version
 if vim.fn.has("nvim-0.12") == 0 then
-    vim.notify("This configuration requires Neovim 0.12+; you have " .. tostring(vim.version()), vim.log.levels.ERROR)
+    vim.api.nvim_echo({
+        { "This configuration requires Neovim 0.12+; you have " .. tostring(vim.version()) .. "\n", "ErrorMsg" },
+        { "Press any key to continue..." },
+    }, true, {})
+    vim.fn.getchar()
     return
 end
 
--- Bootstrap Lazyvim
+-- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
     local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -30,11 +34,11 @@ require("lazy").setup({
         build = ":TSUpdate",
         lazy = false,
         config = function()
-            local ts_filetypes = {
+            local ts_languages = {
                 "c", "cpp", "lua", "rust", "vim", "vimdoc", "query", "markdown", "markdown_inline", "bash", "html", "haskell", "python",
             }
 
-            require("nvim-treesitter").install(ts_filetypes)
+            require("nvim-treesitter").install(ts_languages)
 
             vim.api.nvim_create_autocmd("FileType", {
                 callback = function(args)
@@ -121,7 +125,7 @@ local function check_external_deps()
 
     if #missing > 0 then
         vim.notify(
-            "Missing external dependencies - some LSPs will not work correctly:\n" .. table.concat(missing, "\n"),
+            "Missing external dependencies:\n" .. table.concat(missing, "\n"),
             vim.log.levels.WARN,
             { title = "nvim-config" }
         )
